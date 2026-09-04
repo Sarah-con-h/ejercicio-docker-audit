@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: technova-api
+    ports:
+      - "5050:5050"
+    environment:
+      DB_HOST: servidor-bd-ejemplo
+      DB_USER: root
+      DB_PASS: ${DB_PASS}
+      DB_NAME: legacydb
+    restart: unless-stopped
