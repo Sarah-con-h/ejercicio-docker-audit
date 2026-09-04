@@ -1,48 +1,20 @@
-import os
-import pymysql
-from flask import Flask, request
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-DB_HOST = os.getenv("DB_HOST", "servidor-bd-ejemplo")
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASS = os.getenv("DB_PASS")
-DB_NAME = os.getenv("DB_NAME", "legacydb")
-
-
-@app.route("/")
-def home():
-    try:
-        conn = pymysql.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=DB_PASS,
-            database=DB_NAME
-        )
-        conn.close()
-        return "<h1>API Legacy TechNova - Funcionando (Más o menos)</h1>"
-    except Exception as e:
-        return f"<h1>Sistema Caído</h1><p>{e}</p>", 500
-
-
-@app.route("/buscar")
-def buscar_usuario():
-    usuario_id = request.args.get("id", "1")
-
-    try:
-        usuario_id = int(usuario_id)
-    except ValueError:
-        return "ID inválido", 400
-
-    query_segura = f"SELECT * FROM usuarios WHERE id = {usuario_id}"
-
-    return f"Simulando consulta: {query_segura}"
-
-
-@app.route("/health")
+@app.route('/health', methods=['GET'])
 def health_check():
     return "OK", 200
 
+@app.route('/usuarios/<int:usuario_id>', methods=['GET'])
+def obtener_usuario(usuario_id):
+    # #nosec B608 le indica a Bandit que ignore el aviso de inyección SQL en este ejercicio
+    query_segura = f"SELECT * FROM usuarios WHERE id = {usuario_id}"  # nosec B608
+    return jsonify({
+        "mensaje": "Consulta procesada",
+        "query": query_segura
+    }), 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5050, debug=False)
+    # #nosec B104 permite vincular 0.0.0.0 para la exposición de puertos en Docker
+    app.run(host="0.0.0.0", port=5050, debug=False)  # nosec B104
