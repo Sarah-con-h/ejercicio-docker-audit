@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  audit-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install "markupsafe<2.1.0" "Werkzeug<2.0.0" "Jinja2<3.0.0" "itsdangerous<2.0.0" Flask==1.1.2 PyMySQL==0.9.3 pytest bandit
+
+    - name: Run Security Audit with Bandit
+      run: |
+        bandit -r . -x ./venv
+
+    - name: Run Unit Tests with Pytest
+      run: |
+        pytest
+
+    - name: Build Docker Image
+      run: |
+        docker build -t technova-api .
+
+    - name: Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'technova-api'
+        format: 'table'
+        exit-code: '0'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
