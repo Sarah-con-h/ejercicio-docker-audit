@@ -4,10 +4,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({
-        "mensaje": "API Flask funcionando correctamente",
-        "estado": "OK"
-    }), 200
+    return "API Flask funcionando correctamente", 200
 
 @app.route('/health', methods=['GET'])
 def health_check():
